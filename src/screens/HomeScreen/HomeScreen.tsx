@@ -3,7 +3,7 @@ import {getProductsList} from '@api/getProductsList/getProductsList';
 import {Filters} from '@components/Filters/Filters';
 import {MainScreenHeader} from '@components/MainScreenHeader/MainScreenHeader';
 import {IProduct, ProductCard} from '@components/ProductCard/ProductCard';
-import {Box, Divider, View} from '@gluestack-ui/themed';
+import {Box, Divider, Spinner, View} from '@gluestack-ui/themed';
 import {useAppDispatch, useAppSelector} from '@hooks/storeHooks';
 import {
   IGroceryProduct,
@@ -21,12 +21,12 @@ export const HomeScreen = () => {
   const grocery = useSelector(selectAddedProducts);
   const [filteredProducts, setFilteredProducts] = useState<IProduct[]>([]);
 
-  const {data: groceryData} = useQuery({
+  const {data: groceryData, isLoading: isLoadingGrocery} = useQuery({
     queryKey: ['groceryList'],
     queryFn: getGroceryList,
   });
 
-  const {data: products} = useQuery({
+  const {data: products, isLoading: isLoadingProducts} = useQuery({
     queryKey: ['products'],
     queryFn: getProductsList,
   });
@@ -70,6 +70,14 @@ export const HomeScreen = () => {
     }
   }, [activeFilter, products, grocery]);
 
+  const isLoading = isLoadingGrocery || isLoadingProducts;
+
+  const activity = (
+    <View flex={1} justifyContent="center" alignItems="center">
+      <Spinner color={'$indigo500'} size={'large'} />
+    </View>
+  );
+
   return (
     <View flex={1}>
       <MainScreenHeader boughtProductsQuantity={grocery.length} />
@@ -78,14 +86,18 @@ export const HomeScreen = () => {
         <Divider bg="$indigo500" $dark-bg="$indigo400" w={'$40'} />
       </Box>
 
-      <FlatList
-        data={filteredProducts}
-        numColumns={2}
-        columnWrapperStyle={styles.around}
-        renderItem={({item}) => <ProductCard product={item} />}
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        activity
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          numColumns={2}
+          columnWrapperStyle={styles.around}
+          renderItem={({item}) => <ProductCard product={item} />}
+          keyExtractor={item => item.id}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 };
